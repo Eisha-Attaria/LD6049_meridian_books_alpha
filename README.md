@@ -1,4 +1,8 @@
-## Eisha Attaria Alpha Group :)
+## Team Alpha
+	Eisha Attaria 
+	Mustafa
+	Tanzir
+	Sohail
 
 # Meridian Books
 
