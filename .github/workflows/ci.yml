@@ -39,3 +39,43 @@ jobs:
           docker build -t "$IMAGE:$VERSION" \
           -t "$IMAGE:sha-${GITHUB_SHA::7}" .
           docker push --all-tags "$IMAGE"
+  staging:
+    needs: package
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Log in to GHCR
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$TOKEN" |
+          docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Deploy and check
+        run: |
+          docker run -d -p 3000:3000 \
+          "ghcr.io/${GITHUB_REPOSITORY,,}:sha-${GITHUB_SHA::7}"
+          curl -sSf --retry 10 --retry-connrefused --retry-delay 2 \
+          http://localhost:3000/api/info
+  production:
+    needs: staging
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Log in to GHCR
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$TOKEN" |
+          docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Deploy and check
+        run: |
+          docker run -d -p 3000:3000 \
+          "ghcr.io/${GITHUB_REPOSITORY,,}:sha-${GITHUB_SHA::7}"
+          curl -sSf --retry 10 --retry-connrefused --retry-delay 2 \
+          http://localhost:3000/api/info
